@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="Tutorial 04 - A colored cube" package="nme.nehetutorials.tutorial03" version="1.0.0" company="NME" />
+	<app main="Main" path="Export" file="Tutorial04" />
+	
+	<source path="Source" />
+	
+	<haxelib name="nme" />
+<!--
+	<assets path="Assets" rename="assets" exclude="nme.svg" />
+	<icon path="Assets/nme.svg" />
+-->	
+</project>

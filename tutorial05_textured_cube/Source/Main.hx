@@ -9,6 +9,9 @@ import nme.geom.Matrix3D;
 import nme.geom.Vector3D;
 import nme.gl.GLProgram;
 
+import nme.display.BitmapData;
+import nme.Assets;
+
 import GLM;
 
 class Main extends Sprite {
@@ -59,18 +62,21 @@ class Main extends Sprite {
 "//#version 330 core
 
 // Interpolated values from the vertex shaders
-//in vec3 fragmentColor;
-varying vec3 fragmentColor;
+//in vec2 UV;
+varying vec2 UV;
 
 // Ouput data
 //out vec3 color;
 
+// Values that stay constant for the whole mesh.
+uniform sampler2D myTextureSampler;
+
 void main(){
 
-  // Output color = color specified in the vertex shader, 
-  // interpolated between all 3 surrounding vertices
-  //color = fragmentColor;
-  gl_FragColor = vec4(fragmentColor, 1);
+
+  // Output color = color of the texture at the specified UV
+  //color = texture( myTextureSampler, UV ).rgb;
+  gl_FragColor = texture2D( myTextureSampler, UV );
 
 }
 ";
@@ -83,13 +89,13 @@ precision highp float; //GLES
 
 // Input vertex data, different for all executions of this shader.
 //layout(location = 0) in vec3 vertexPosition_modelspace;
-//layout(location = 1) in vec3 vertexColor;
+//layout(location = 1) in vec3 vertexUV;
 attribute vec3 vertexPosition_modelspace;
-attribute vec3 vertexColor;
+attribute vec2 vertexUV;
 
 // Output data ; will be interpolated for each fragment.
-//out vec3 fragmentColor;
-varying vec3 fragmentColor;
+//out vec2 UV;
+varying vec2 UV;
 // Values that stay constant for the whole mesh.
 uniform mat4 MVP;
 
@@ -100,7 +106,7 @@ void main(){
 
   // The color of each vertex will be interpolated
   // to produce the color of each fragment
-  fragmentColor = vertexColor;
+  UV = vertexUV;
 }
 ";
 
@@ -137,7 +143,8 @@ void main(){
         mvp.append(view);
         mvp.append(projection);
 
-      
+        var texture:BitmapData = Assets.getBitmapData("assets/uvtemplate.png");
+
 
         // Our vertices. Tree consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
         // A cube has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
@@ -180,53 +187,55 @@ void main(){
            1.0,-1.0, 1.0
         ];
 
-        // One color for each vertex. They were generated randomly.
-        var g_color_buffer_data = [ 
-          0.583,  0.771,  0.014,
-          0.609,  0.115,  0.436,
-          0.327,  0.483,  0.844,
-          0.822,  0.569,  0.201,
-          0.435,  0.602,  0.223,
-          0.310,  0.747,  0.185,
-          0.597,  0.770,  0.761,
-          0.559,  0.436,  0.730,
-          0.359,  0.583,  0.152,
-          0.483,  0.596,  0.789,
-          0.559,  0.861,  0.639,
-          0.195,  0.548,  0.859,
-          0.014,  0.184,  0.576,
-          0.771,  0.328,  0.970,
-          0.406,  0.615,  0.116,
-          0.676,  0.977,  0.133,
-          0.971,  0.572,  0.833,
-          0.140,  0.616,  0.489,
-          0.997,  0.513,  0.064,
-          0.945,  0.719,  0.592,
-          0.543,  0.021,  0.978,
-          0.279,  0.317,  0.505,
-          0.167,  0.620,  0.077,
-          0.347,  0.857,  0.137,
-          0.055,  0.953,  0.042,
-          0.714,  0.505,  0.345,
-          0.783,  0.290,  0.734,
-          0.722,  0.645,  0.174,
-          0.302,  0.455,  0.848,
-          0.225,  0.587,  0.040,
-          0.517,  0.713,  0.338,
-          0.053,  0.959,  0.120,
-          0.393,  0.621,  0.362,
-          0.673,  0.211,  0.457,
-          0.820,  0.883,  0.371,
-          0.982,  0.099,  0.879
+
+
+        // Two UV coordinatesfor each vertex. They were created with Blender.
+        var g_uv_buffer_data = [ 
+          0.000059, /*1.0-*/0.000004, 
+          0.000103, /*1.0-*/0.336048, 
+          0.335973, /*1.0-*/0.335903, 
+          1.000023, /*1.0-*/0.000013, 
+          0.667979, /*1.0-*/0.335851, 
+          0.999958, /*1.0-*/0.336064, 
+          0.667979, /*1.0-*/0.335851, 
+          0.336024, /*1.0-*/0.671877, 
+          0.667969, /*1.0-*/0.671889, 
+          1.000023, /*1.0-*/0.000013, 
+          0.668104, /*1.0-*/0.000013, 
+          0.667979, /*1.0-*/0.335851, 
+          0.000059, /*1.0-*/0.000004, 
+          0.335973, /*1.0-*/0.335903, 
+          0.336098, /*1.0-*/0.000071, 
+          0.667979, /*1.0-*/0.335851, 
+          0.335973, /*1.0-*/0.335903, 
+          0.336024, /*1.0-*/0.671877, 
+          1.000004, /*1.0-*/0.671847, 
+          0.999958, /*1.0-*/0.336064, 
+          0.667979, /*1.0-*/0.335851, 
+          0.668104, /*1.0-*/0.000013, 
+          0.335973, /*1.0-*/0.335903, 
+          0.667979, /*1.0-*/0.335851, 
+          0.335973, /*1.0-*/0.335903, 
+          0.668104, /*1.0-*/0.000013, 
+          0.336098, /*1.0-*/0.000071, 
+          0.000103, /*1.0-*/0.336048, 
+          0.000004, /*1.0-*/0.671870, 
+          0.336024, /*1.0-*/0.671877, 
+          0.000103, /*1.0-*/0.336048, 
+          0.336024, /*1.0-*/0.671877, 
+          0.335973, /*1.0-*/0.335903, 
+          0.667969, /*1.0-*/0.671889, 
+          1.000004, /*1.0-*/0.671847, 
+          0.667979, /*1.0-*/0.335851
         ];
 
         var vertexbuffer = GL.createBuffer();
         GL.bindBuffer(GL.ARRAY_BUFFER, vertexbuffer);
         GL.bufferData(GL.ARRAY_BUFFER, new Float32Array(g_vertex_buffer_data), GL.STATIC_DRAW);
 
-        var colorbuffer = GL.createBuffer();
-        GL.bindBuffer(GL.ARRAY_BUFFER, colorbuffer);
-        GL.bufferData(GL.ARRAY_BUFFER, new Float32Array(g_color_buffer_data), GL.STATIC_DRAW);
+        var uvbuffer = GL.createBuffer();
+        GL.bindBuffer(GL.ARRAY_BUFFER, uvbuffer);
+        GL.bufferData(GL.ARRAY_BUFFER, new Float32Array(g_uv_buffer_data), GL.STATIC_DRAW);
 
         // Dark blue background
         nme.Lib.stage.opaqueBackground = 0x000066;
@@ -253,7 +262,11 @@ void main(){
             GL.uniformMatrix4fv(matrixID, false, Float32Array.fromMatrix(mvp));
 
             var posAttrib = 0;//GL.getAttribLocation(prog, "vertexPosition_modelspace");
-            var colorAttrib = 1;//GL.getAttribLocation(prog, "vertexColor");
+            var uvAttrib = 1;//GL.getAttribLocation(prog, "vertexColor");
+
+
+            // Bind our texture in Texture Unit 0
+            GL.bindBitmapDataTexture( texture );
 
             // 1rst attribute buffer : vertices
             GL.enableVertexAttribArray(posAttrib);
@@ -267,12 +280,12 @@ void main(){
                 0 // array buffer offset
                 );
 
-            // 2nd attribute buffer : colors
-            GL.enableVertexAttribArray(colorAttrib);
-            GL.bindBuffer(GL.ARRAY_BUFFER, colorbuffer);
+            // 2nd attribute buffer : UVs
+            GL.enableVertexAttribArray(uvAttrib);
+            GL.bindBuffer(GL.ARRAY_BUFFER, uvbuffer);
             GL.vertexAttribPointer(
-                colorAttrib, // attribute 0. No particular reason for 0, but must match the layout in the shader 
-                3, // size
+                uvAttrib, // attribute 0. No particular reason for 0, but must match the layout in the shader 
+                2, // size
                 GL.FLOAT, // type
                 false, // normalized?
                 0, // stride

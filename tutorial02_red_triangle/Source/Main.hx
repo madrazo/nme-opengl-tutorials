@@ -7,44 +7,11 @@ import nme.Lib;
 import nme.utils.Float32Array;
 
 import nme.gl.GLProgram;
+import nme.gl.Utils;
 
 class Main extends Sprite {
-    
-   public function createShader(source:String, type:Int)
-   {
-      var shader = GL.createShader(type);
-      GL.shaderSource(shader, source);
-      GL.compileShader(shader);
-      if (GL.getShaderParameter(shader, GL.COMPILE_STATUS)==0)
-      {
-         trace("--- ERR ---\n" + source);
-         var err = GL.getShaderInfoLog(shader);
-         if (err!="")
-            throw err;
-      }
-      return shader;
-   }
-
-   public function createProgram(inVertexSource:String, inFragmentSource:String)
-   {
-      var program = GL.createProgram();
-      var vshader = createShader(inVertexSource, GL.VERTEX_SHADER);
-      var fshader = createShader(inFragmentSource, GL.FRAGMENT_SHADER);
-      GL.attachShader(program, vshader);
-      GL.attachShader(program, fshader);
-      GL.linkProgram(program);
-      if (GL.getProgramParameter(program, GL.LINK_STATUS)==0)
-      {
-         var result = GL.getProgramInfoLog(program);
-         if (result!="")
-            throw result;
-      }
-
-      return program;
-   }
 
 
-    
     public function new ()
     {        
         super ();
@@ -52,70 +19,74 @@ class Main extends Sprite {
         var ogl = new OpenGLView();
         addChild(ogl);
 
-var fragShader = 
-"
-// Ouput data
-out vec3 color;
+        var fragShader:String = 
+"// Ouput data
+"+Utils.OUT_COLOR("color")+"
 
 void main()
 {
-
     // Output color = red 
-    color = vec3(1,0,0);
-
+    color = vec4(1.0,0.0,0.0,1.0);
 }
 ";
 
-var vertShader =
-"
-// Input vertex data, different for all executions of this shader.
-layout(location = 0) in vec3 vertexPosition_modelspace;
+
+        var vertShader:String = 
+"// Input vertex data, different for all executions of this shader.
+"+Utils.IN(0)+" vec3 vertexPosition_modelspace;
 
 void main(){
-
     gl_Position.xyz = vertexPosition_modelspace;
     gl_Position.w = 1.0;
-
 }
 ";
 
+        // Dark blue background: For NME, use "opaqueBackground" instead of "clearColor"
+        //GL.clearColor(0.0, 0.0, 0.4, 0.0);
+        nme.Lib.stage.opaqueBackground = 0x000066;
+
+        //GLES3
+        if (Utils.isGLES3compat())
+        {
+            var vertexarray = GL.createVertexArray();
+            GL.bindVertexArray(vertexarray);
+        }
 
         // Create and compile our GLSL program from the shaders
-        var prog = createProgram(vertShader,fragShader);
+        var prog = Utils.createProgram(vertShader,fragShader);
 
 
-//        var frameBuffer = GL.createFramebuffer();
-//        GL.bindFramebuffer(GL.FRAMEBUFFER,frameBuffer);
-
-         var g_vertex_buffer_data = [
-         -1.0, -1.0, 0.0, 1.0,
-         1.0, -1.0, 0.0, 1.0,
-         0.0,  1.0, 0.0, 1.0
-        ];
-
+        var g_vertex_buffer_data = [
+         -1.0, -1.0, 0.0, //vertex 0 x,y,z
+          1.0, -1.0, 0.0, //vertex 1
+          0.0,  1.0, 0.0, //vertex 2
+        ]; //3 vertex of size 3
 
         var vertexbuffer = GL.createBuffer();
         GL.bindBuffer(GL.ARRAY_BUFFER, vertexbuffer);
         GL.bufferData(GL.ARRAY_BUFFER, new Float32Array(g_vertex_buffer_data), GL.STATIC_DRAW);
 
+        var posAttrib = 0;
+        if (!Utils.isGLES3compat())
+        {
+          posAttrib = GL.getAttribLocation(prog, "vertexPosition_modelspace");
+        }
 
         ogl.render = function(rect:Rectangle)
         {
- 			// Dark blue background
-            GL.clearColor(0.0, 0.0, 0.4, 0.0);
-
+            //NME already calls GL.clear with "opaqueBackground" color
             // Clear the screen.
-            GL.clear(GL.COLOR_BUFFER_BIT);
+            //GL.clear(GL.COLOR_BUFFER_BIT);
 
             // Use our shader
             GL.useProgram(prog);
 
             // 1rst attribute buffer : vertices
-            GL.enableVertexAttribArray(0);
+            GL.enableVertexAttribArray(posAttrib);
             GL.bindBuffer(GL.ARRAY_BUFFER, vertexbuffer);
             GL.vertexAttribPointer(
-                0, // attribute 0. No particular reason for 0, but must match the layout in the shader 
-                4, // size
+                posAttrib, // attribute 0. No particular reason for 0, but must match the layout in the shader 
+                3,  // size
                 GL.FLOAT, // type
                 false, // normalized?
                 0, // stride
@@ -125,6 +96,8 @@ void main(){
             // Draw the triangle !
             GL.drawArrays(GL.TRIANGLES, 0, 3);
             GL.disableVertexAttribArray(0);
+
+           // Swap buffers: is done automatically
         }
     }
     

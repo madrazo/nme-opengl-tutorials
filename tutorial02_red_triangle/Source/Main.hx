@@ -21,10 +21,10 @@ class Main extends Sprite {
 
         var fragShader:String = 
 "// Ouput data
-"+Utils.OUT_COLOR("color")+"
-
-void main()
-{
+" + 
+Utils.OUT_COLOR("color") +
+"
+void main(){
     // Output color = red 
     color = vec4(1.0,0.0,0.0,1.0);
 }
@@ -33,7 +33,8 @@ void main()
 
         var vertShader:String = 
 "// Input vertex data, different for all executions of this shader.
-"+Utils.IN(0)+" vec3 vertexPosition_modelspace;
+" +
+Utils.IN(0) + " vec3 vertexPosition_modelspace;
 
 void main(){
     gl_Position.xyz = vertexPosition_modelspace;

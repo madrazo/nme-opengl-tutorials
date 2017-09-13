@@ -5,49 +5,16 @@ import nme.gl.GL;
 import nme.Assets;
 import nme.Lib;
 import nme.utils.Float32Array;
-import nme.geom.Matrix3D;
-import nme.geom.Vector3D;
 import nme.gl.GLProgram;
+import nme.gl.Utils;
 
+import nme.geom.Matrix3D;	
+import nme.geom.Vector3D;
 import GLM;
 
 class Main extends Sprite {
-    
-   public function createShader(source:String, type:Int)
-   {
-      var shader = GL.createShader(type);
-      GL.shaderSource(shader, source);
-      GL.compileShader(shader);
-      if (GL.getShaderParameter(shader, GL.COMPILE_STATUS)==0)
-      {
-         trace("--- ERR ---\n" + source);
-         var err = GL.getShaderInfoLog(shader);
-         if (err!="")
-            throw err;
-      }
-      return shader;
-   }
-
-   public function createProgram(inVertexSource:String, inFragmentSource:String)
-   {
-      var program = GL.createProgram();
-      var vshader = createShader(inVertexSource, GL.VERTEX_SHADER);
-      var fshader = createShader(inFragmentSource, GL.FRAGMENT_SHADER);
-      GL.attachShader(program, vshader);
-      GL.attachShader(program, fshader);
-      GL.linkProgram(program);
-      if (GL.getProgramParameter(program, GL.LINK_STATUS)==0)
-      {
-         var result = GL.getProgramInfoLog(program);
-         if (result!="")
-            throw result;
-      }
-
-      return program;
-   }
 
 
-    
     public function new ()
     {        
         super ();
@@ -55,48 +22,37 @@ class Main extends Sprite {
         var ogl = new OpenGLView();
         addChild(ogl);
 
-        var fragShader = 
-"//#version 330 core
-
-// Interpolated values from the vertex shaders
-//in vec3 fragmentColor;
-varying vec3 fragmentColor;
+        var fragShader:String = 
+"// Interpolated values from the vertex shaders
+" + Utils.IN() + " vec3 fragmentColor;
 
 // Ouput data
-//out vec3 color;
-
+" + 
+Utils.OUT_COLOR("color") +
+"
 void main(){
-
   // Output color = color specified in the vertex shader, 
   // interpolated between all 3 surrounding vertices
-  //color = fragmentColor;
-  gl_FragColor = vec4(fragmentColor, 1);
-
+  color = vec4(fragmentColor, 1.0);
 }
 ";
 
 
-      var vertShader =
-"//#version 330 core
-
-precision highp float; //GLES
-
-// Input vertex data, different for all executions of this shader.
-//layout(location = 0) in vec3 vertexPosition_modelspace;
-//layout(location = 1) in vec3 vertexColor;
-attribute vec3 vertexPosition_modelspace;
-attribute vec3 vertexColor;
+      var vertShader:String =
+"// Input vertex data, different for all executions of this shader.
+" +
+Utils.IN(0) + " vec3 vertexPosition_modelspace;
+" +
+Utils.IN(1) + " vec3 vertexColor;
 
 // Output data ; will be interpolated for each fragment.
-//out vec3 fragmentColor;
-varying vec3 fragmentColor;
+" + Utils.OUT() +" vec3 fragmentColor;
 // Values that stay constant for the whole mesh.
 uniform mat4 MVP;
 
-void main(){  
-
+void main(){
   // Output position of the vertex, in clip space : MVP * position
-  gl_Position =  MVP * vec4(vertexPosition_modelspace,1);
+  gl_Position =  MVP * vec4(vertexPosition_modelspace,1.0);
 
   // The color of each vertex will be interpolated
   // to produce the color of each fragment
@@ -113,25 +69,42 @@ void main(){
         // NME disable depth test for now
         GL.disable(GL.DEPTH_TEST);
 
+
+        // Dark blue background: For NME, use "opaqueBackground" instead of "clearColor"
+        //GL.clearColor(0.0, 0.0, 0.4, 0.0);
+        nme.Lib.stage.opaqueBackground = 0x000066;
+
+        //GLES3
+        if (Utils.isGLES3compat())
+        {
+            var vertexarray = GL.createVertexArray();
+            GL.bindVertexArray(vertexarray);
+        }
+
         // Create and compile our GLSL program from the shaders
-        var prog = createProgram(vertShader,fragShader);
+        var prog = Utils.createProgram(vertShader,fragShader);
 
         // Get a handle for our "MVP" uniform
         var matrixID = GL.getUniformLocation(prog, "MVP");
-    
-        var aspect = 4 / 3;
-        var zNear = 0.1;
-        var zFar = 1000;
-        var fov = 45 * Math.PI / 180;
-        var projection = GLM.perspective(fov, aspect, zNear, zFar);
-
+        var model = new Matrix3D();
+#if false
+        //Ortho camera
+        var view:Matrix3D = new Matrix3D();
+        var projection = Matrix3D.createOrtho(-10.0,10.0,-10.0,10.0,0.0,100.0);
+#else
+       //Perp camera
         var view:Matrix3D = GLM.lookAt(
           new Vector3D(4,3,-3), // Camera is at (4,3,-3), in World Space
           new Vector3D(0,0,0), // and looks at the origin
           new Vector3D(0,1,0) // Head is up (set to 0,-1,0 to look upside-down)
           );
-
-        var model = new Matrix3D();
+    
+        var fov = 45 * Math.PI / 180;
+        var aspect = 4 / 3;
+        var zNear = 0.1;
+        var zFar = 1000;
+        var projection = GLM.perspective(fov, aspect, zNear, zFar);
+#end
 
         var mvp = model;
         mvp.append(view);
@@ -228,21 +201,24 @@ void main(){
         GL.bindBuffer(GL.ARRAY_BUFFER, colorbuffer);
         GL.bufferData(GL.ARRAY_BUFFER, new Float32Array(g_color_buffer_data), GL.STATIC_DRAW);
 
-        // Dark blue background
-        nme.Lib.stage.opaqueBackground = 0x000066;
+
+        var posAttrib = 0;
+	var colorAttrib = 1;
+        if (!Utils.isGLES3compat())
+        {
+          posAttrib = GL.getAttribLocation(prog, "vertexPosition_modelspace");
+          colorAttrib = GL.getAttribLocation(prog, "vertexColor");
+        }
 
         ogl.render = function(rect:Rectangle)
         {
 
-            //NME already calls GL.clear, set clear color with "opaqueBackground"
- 			      // Dark blue background
-            //GL.clearColor(0.0, 0.0, 0.4, 0.0);
+            //NME already calls GL.clear with "opaqueBackground" color
             // Clear the screen.
             //GL.clear(GL.COLOR_BUFFER_BIT);
 
-            // NME: Enable depth test per frame
+            // NME: Enable depth test per frame?
             GL.enable(GL.DEPTH_TEST);
-
             GL.clear(GL.DEPTH_BUFFER_BIT);
 
             // Use our shader
@@ -251,9 +227,6 @@ void main(){
             // Send our transformation to the currently bound shader, 
             // in the "MVP" uniform
             GL.uniformMatrix4fv(matrixID, false, Float32Array.fromMatrix(mvp));
-
-            var posAttrib = 0;//GL.getAttribLocation(prog, "vertexPosition_modelspace");
-            var colorAttrib = 1;//GL.getAttribLocation(prog, "vertexColor");
 
             // 1rst attribute buffer : vertices
             GL.enableVertexAttribArray(posAttrib);
@@ -287,10 +260,10 @@ void main(){
 
             //NME: Disable if enabled per frame
             GL.disable(GL.DEPTH_TEST);
+
+           // Swap buffers: is done automatically
         }
     }
-
     
-
-
+    
 }

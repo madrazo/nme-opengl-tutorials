@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="Tutorial 03 - Matrices" package="nme.nehetutorials.tutorial03" version="1.0.0" company="NME" />
+	<meta title="Tutorial 03 - Matrices" package="nme.opengltutorials.tutorial03" version="1.0.0" company="NME" />
 	<app main="Main" path="Export" file="Tutorial03" />
 	
 	<source path="Source" />

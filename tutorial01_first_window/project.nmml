@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="Tutorial 01" package="nme.nehetutorials.tutorial01" version="1.0.0" company="NME" />
+	<meta title="Tutorial 01" package="nme.opengltutorials.tutorial01" version="1.0.0" company="NME" />
 	<app main="Main" path="Export" file="Tutorial01" />
 	
 	<source path="Source" />

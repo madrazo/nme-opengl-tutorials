@@ -2,7 +2,7 @@
 <project>
 	
 	<meta title="Tutorial 06 - Keyboard and Mouse" package="nme.opengltutorials.tutorial06" version="1.0.0" company="NME" />
-	<app main="Main" path="Export" file="Tutorial05" />
+	<app main="Main" path="Export" file="Tutorial06" />
 	
 	<source path="Source" />
 	

@@ -5,6 +5,8 @@ import nme.gl.GL;
 import nme.Assets;
 import nme.Lib;
 import nme.utils.Float32Array;
+import nme.text.TextField;
+import nme.text.TextFieldAutoSize;
 
 import nme.gl.GLProgram;
 import nme.gl.Utils;
@@ -18,6 +20,8 @@ class Main extends Sprite {
 
         var ogl = new OpenGLView();
         addChild(ogl);
+
+        addDebugText();
 
         var fragShader:String = 
 "// Ouput data
@@ -102,5 +106,23 @@ void main(){
         }
     }
     
+    public inline function addDebugText ()
+    {
+        var tex = new TextField();
+        addChild(tex);
+        tex.autoSize = TextFieldAutoSize.LEFT;
+        tex.background = true;
+        tex.defaultTextFormat.size = 200;
+        if (Utils.isGLES3compat())
+        {
+            trace("Compatible with GLES3 API");
+            tex.text = "Compatible with GLES3 API";
+        }
+        else
+        {
+            trace("Not compatible with GLES3 API");
+            tex.text = "Not compatible with GLES3 API";
+        }
+    }
     
 }

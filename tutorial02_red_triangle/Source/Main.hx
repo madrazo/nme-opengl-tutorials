@@ -2,6 +2,7 @@ import nme.display.Sprite;
 import nme.geom.Rectangle;
 import nme.display.OpenGLView;
 import nme.gl.GL;
+import nme.gl.GL3;
 import nme.Assets;
 import nme.Lib;
 import nme.utils.Float32Array;
@@ -53,8 +54,8 @@ void main(){
         //GLES3
         if (Utils.isGLES3compat())
         {
-            var vertexarray = GL.createVertexArray();
-            GL.bindVertexArray(vertexarray);
+            var vertexarray = GL3.createVertexArray();
+            GL3.bindVertexArray(vertexarray);
         }
 
         // Create and compile our GLSL program from the shaders

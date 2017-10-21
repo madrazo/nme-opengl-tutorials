@@ -2,9 +2,13 @@ import nme.display.Sprite;
 import nme.geom.Rectangle;
 import nme.display.OpenGLView;
 import nme.gl.GL;
+import nme.gl.GL3;
 import nme.Assets;
 import nme.Lib;
 import nme.utils.Float32Array;
+import nme.text.TextField;
+import nme.text.TextFieldAutoSize;
+
 import nme.gl.GLProgram;
 import nme.gl.Utils;
 
@@ -21,6 +25,8 @@ class Main extends Sprite {
 
         var ogl = new OpenGLView();
         addChild(ogl);
+
+        addDebugText();
 
         var fragShader:String = 
 "// Interpolated values from the vertex shaders
@@ -77,8 +83,8 @@ void main(){
         //GLES3
         if (Utils.isGLES3compat())
         {
-            var vertexarray = GL.createVertexArray();
-            GL.bindVertexArray(vertexarray);
+            var vertexarray = GL3.createVertexArray();
+            GL3.bindVertexArray(vertexarray);
         }
 
         // Create and compile our GLSL program from the shaders
@@ -92,7 +98,7 @@ void main(){
         var view:Matrix3D = new Matrix3D();
         var projection = Matrix3D.createOrtho(-10.0,10.0,-10.0,10.0,0.0,100.0);
 #else
-       //Perp camera
+       //Persp camera
         var view:Matrix3D = GLM.lookAt(
           new Vector3D(4,3,-3), // Camera is at (4,3,-3), in World Space
           new Vector3D(0,0,0), // and looks at the origin
@@ -212,7 +218,6 @@ void main(){
 
         ogl.render = function(rect:Rectangle)
         {
-
             //NME already calls GL.clear with "opaqueBackground" color
             // Clear the screen.
             //GL.clear(GL.COLOR_BUFFER_BIT);
@@ -265,5 +270,23 @@ void main(){
         }
     }
     
+    public inline function addDebugText ()
+    {
+        var tex = new TextField();
+        addChild(tex);
+        tex.autoSize = TextFieldAutoSize.LEFT;
+        tex.background = true;
+        tex.defaultTextFormat.size = 200;
+        if (Utils.isGLES3compat())
+        {
+            trace("Compatible with GLES3 API");
+            tex.text = "Compatible with GLES3 API";
+        }
+        else
+        {
+            trace("Not compatible with GLES3 API");
+            tex.text = "Not compatible with GLES3 API";
+        }
+    }
     
 }

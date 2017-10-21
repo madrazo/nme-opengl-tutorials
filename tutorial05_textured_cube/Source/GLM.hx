@@ -51,6 +51,8 @@ class GLM {
         raw[INDEX(3,1)] = -u.dotProduct(eye);
         raw[INDEX(3,2)] = -f.dotProduct(eye);
 
+        eye.z = -eye.z; //revert?
+
         return new Matrix3D(raw);
     }
 

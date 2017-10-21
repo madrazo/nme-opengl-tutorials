@@ -2,9 +2,13 @@ import nme.display.Sprite;
 import nme.geom.Rectangle;
 import nme.display.OpenGLView;
 import nme.gl.GL;
+import nme.gl.GL3;
 import nme.Assets;
 import nme.Lib;
 import nme.utils.Float32Array;
+import nme.text.TextField;
+import nme.text.TextFieldAutoSize;
+
 import nme.gl.GLProgram;
 import nme.gl.Utils;
 
@@ -29,6 +33,8 @@ class Main extends Sprite {
         var ogl = new OpenGLView();
         addChild(ogl);
 
+        addDebugText();
+
         var fragShader:String = 
 "// Interpolated values from the vertex shaders
 " + Utils.IN() + " vec2 UV;
@@ -43,7 +49,7 @@ uniform sampler2D myTextureSampler;
 
 void main(){
   // Output color = color of the texture at the specified UV
-  color = " + Utils.TEXTURE() +"( myTextureSampler, UV );
+  color = " + Utils.TEXTURE("myTextureSampler, UV") +";
 }
 ";
 
@@ -87,8 +93,8 @@ void main(){
         //GLES3
         if (Utils.isGLES3compat())
         {
-            var vertexarray = GL.createVertexArray();
-            GL.bindVertexArray(vertexarray);
+            var vertexarray = GL3.createVertexArray();
+            GL3.bindVertexArray(vertexarray);
         }
 
         // Create and compile our GLSL program from the shaders
@@ -117,7 +123,7 @@ void main(){
 
 
         var posAttrib = 0;
-	      var uvAttrib = 1;
+	var uvAttrib = 1;
         if (!Utils.isGLES3compat())
         {
           posAttrib = GL.getAttribLocation(prog, "vertexPosition_modelspace");
@@ -194,5 +200,23 @@ void main(){
         }
     }
     
+    public inline function addDebugText ()
+    {
+        var tex = new TextField();
+        addChild(tex);
+        tex.autoSize = TextFieldAutoSize.LEFT;
+        tex.background = true;
+        tex.defaultTextFormat.size = 200;
+        if (Utils.isGLES3compat())
+        {
+            trace("Compatible with GLES3 API");
+            tex.text = "Compatible with GLES3 API";
+        }
+        else
+        {
+            trace("Not compatible with GLES3 API");
+            tex.text = "Not compatible with GLES3 API";
+        }
+    }
     
 }

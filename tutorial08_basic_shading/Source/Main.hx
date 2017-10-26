@@ -186,7 +186,8 @@ void main(){
         var g_uv_buffer_data:Array<Float> = [];
         var g_normals_buffer_data:Array<Float> = [];
        
-        ObjLoader.loadObj("assets/cube.obj", g_vertex_buffer_data, g_uv_buffer_data, g_normals_buffer_data);
+        ObjLoader.loadObj("assets/suzanne.obj", g_vertex_buffer_data, g_uv_buffer_data, g_normals_buffer_data);
+        var nTriangles:Int = Std.int(g_vertex_buffer_data.length/3);
 
         var vertexbuffer = GL.createBuffer();
         GL.bindBuffer(GL.ARRAY_BUFFER, vertexbuffer);
@@ -201,13 +202,13 @@ void main(){
         GL.bufferData(GL.ARRAY_BUFFER, new Float32Array(g_normals_buffer_data), GL.STATIC_DRAW);
 
         var posAttrib = 0;
-	var uvAttrib = 1;
-	var normalAttrib = 2;
+        var uvAttrib = 1;
+        var normalAttrib = 2;
         if (!Utils.isGLES3compat())
         {
-          posAttrib = GL.getAttribLocation(prog, "vertexPosition_modelspace");
-          uvAttrib = GL.getAttribLocation(prog, "vertexUV");
-	  normalAttrib = GL.getAttribLocation(prog, "vertexNormal_modelspace");
+            posAttrib = GL.getAttribLocation(prog, "vertexPosition_modelspace");
+            uvAttrib = GL.getAttribLocation(prog, "vertexUV");
+            normalAttrib = GL.getAttribLocation(prog, "vertexNormal_modelspace");
         }
 
        // Get a handle for our "LightPosition" uniform
@@ -243,11 +244,11 @@ void main(){
             // Send our transformation to the currently bound shader, 
             // in the "MVP" uniform
             GL.uniformMatrix4fv(matrixID, false, Float32Array.fromMatrix(mvp));
-		GL.uniformMatrix4fv(modelMatrixID, false, Float32Array.fromMatrix(model));
-		GL.uniformMatrix4fv(viewMatrixID, false, Float32Array.fromMatrix(view));
+            GL.uniformMatrix4fv(modelMatrixID, false, Float32Array.fromMatrix(model));
+            GL.uniformMatrix4fv(viewMatrixID, false, Float32Array.fromMatrix(view));
 
-		var lightPos = new nme.geom.Vector3D(4,4,4);
-		GL.uniform3f(lightID, lightPos.x, lightPos.y, lightPos.z);
+            var lightPos = new nme.geom.Vector3D(4,4,4);
+            GL.uniform3f(lightID, lightPos.x, lightPos.y, lightPos.z);
 
             // Bind our texture in Texture Unit 0
             GL.bindBitmapDataTexture( texture );
@@ -256,7 +257,7 @@ void main(){
             GL.enableVertexAttribArray(posAttrib);
             GL.bindBuffer(GL.ARRAY_BUFFER, vertexbuffer);
             GL.vertexAttribPointer(
-                posAttrib, // attribute 0. No particular reason for 0, but must match the layout in the shader 
+                posAttrib, // attribute
                 3, // size
                 GL.FLOAT, // type
                 false, // normalized?
@@ -268,7 +269,7 @@ void main(){
             GL.enableVertexAttribArray(uvAttrib);
             GL.bindBuffer(GL.ARRAY_BUFFER, uvbuffer);
             GL.vertexAttribPointer(
-                uvAttrib, // attribute 0. No particular reason for 0, but must match the layout in the shader 
+                uvAttrib, // attribute
                 2, // size
                 GL.FLOAT, // type
                 false, // normalized?
@@ -290,7 +291,7 @@ void main(){
 
 
             // Draw the triangles !
-            GL.drawArrays(GL.TRIANGLES, 0, 12*3);
+            GL.drawArrays(GL.TRIANGLES, 0, nTriangles);
             GL.disableVertexAttribArray(0);
             GL.disableVertexAttribArray(1);
             GL.disableVertexAttribArray(2);

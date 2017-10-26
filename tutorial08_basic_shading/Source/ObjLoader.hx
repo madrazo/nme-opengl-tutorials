@@ -80,9 +80,9 @@ class ObjLoader {
             uvBufferData.push(temp_uvs[ t ]);
             uvBufferData.push(1.0-temp_uvs[ t+1 ]); //1.0- OK?
 
-            normalsBufferData.push(temp_vertices[ n ]);
-            normalsBufferData.push(temp_vertices[ n+1 ]);
-            normalsBufferData.push(temp_vertices[ n+2 ]);
+            normalsBufferData.push(temp_normals[ n ]);
+            normalsBufferData.push(temp_normals[ n+1 ]);
+            normalsBufferData.push(temp_normals[ n+2 ]);
         }
     }  
 }

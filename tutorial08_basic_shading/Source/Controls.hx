@@ -25,10 +25,10 @@ class Controls {
 
     public function new ()
     {        
-        // Initial position : on +Z
-        m_position = new Vector3D(0,0,5);
-        // Initial horizontal angle : toward -Z
-        horizontalAngle = 3.14;
+        // Initial position : on +Z //-Z
+        m_position = new Vector3D(0,0,-5);
+        // Initial horizontal angle : toward -Z //+Z
+        horizontalAngle = 0;//3.14;
         // Initial vertical angle : none
         verticalAngle = 0;
         // Initial Field of View

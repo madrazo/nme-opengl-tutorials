@@ -53,7 +53,7 @@ class ShaderBitmap extends Sprite
     private var m_texcoord:Array<Float>;
     private var m_texBuffer:GLBuffer;
     private var m_texArray:Float32Array;
-    private var samplerNameArr:Array<String> = ["color_texture","normal_texture"];
+    private var samplerNameArr:Array<String> = ["sampler_MainTex","sampler_SecondTex"];
 
     public function new(shaderProgram:GLProgram, textures:Array<BitmapData>, w:Int=200, h:Int=200):Void
     {
@@ -98,12 +98,12 @@ class ShaderBitmap extends Sprite
             
         vertexAttribute = GL.getAttribLocation (shaderProgram, "vertexPosition");
     
-        m_projectionMatrixUniform = GL.getUniformLocation (shaderProgram, "projectionMatrix");
-        m_modelViewMatrixUniform = GL.getUniformLocation (shaderProgram, "modelViewMatrix");
+        m_projectionMatrixUniform = GL.getUniformLocation (shaderProgram, "NME_MATRIX_P");
+        m_modelViewMatrixUniform = GL.getUniformLocation (shaderProgram, "NME_MATRIX_MV");
         
-        timeUniform = GL.getUniformLocation (shaderProgram, "time");
-        resolutionUniform = GL.getUniformLocation (shaderProgram, "resolution");
-        mouseUniform = GL.getUniformLocation (shaderProgram, "mouse");
+        timeUniform = GL.getUniformLocation (shaderProgram, "_Time");
+        resolutionUniform = GL.getUniformLocation (shaderProgram, "_ScreenParams");
+        mouseUniform = GL.getUniformLocation (shaderProgram, "nme_Mouse");
         
         startTime = Lib.getTimer ();
         
@@ -200,7 +200,7 @@ class ShaderBitmap extends Sprite
             GL.uniform2f (mouseUniform, (Lib.current.stage.mouseX / Lib.current.stage.stageWidth) * 2 - 1, (Lib.current.stage.mouseY / Lib.current.stage.stageHeight) * 2 - 1);
 
         if( resolutionUniform>=0 )
-            GL.uniform2f (resolutionUniform, rect.width, rect.height);
+            GL.uniform4f (resolutionUniform, rect.width, rect.height, 1.0 + 1.0/rect.width, 1.0 + 1.0/rect.height);
         
         if( m_positionX != x || m_positionY != y )
         {
@@ -219,12 +219,13 @@ class ShaderBitmap extends Sprite
         bindTextures();
         
         GL.drawArrays (GL.TRIANGLE_STRIP, 0, 4);
+
+        unbindTextures();
     
         GL.bindBuffer (GL.ARRAY_BUFFER, null);    
         GL.useProgram (null);
         GL.disableVertexAttribArray(vertexAttribute);
         
-        unbindTextures();
     }
 }
 

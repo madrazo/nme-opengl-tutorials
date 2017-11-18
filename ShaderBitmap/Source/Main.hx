@@ -92,34 +92,34 @@ class Main extends Sprite {
         public var fs_texturemap = 
 "   varying vec2 vTexCoord;
 
-    uniform sampler2D sampler_MainTex;   
+    uniform sampler2D _Texture0;   
     //uniform float _Time;
     //uniform vec2 nme_Mouse;
     //uniform vec4 _ScreenParams;
   
     void main() {  
         // Set the output color of our current pixel  
-        gl_FragColor = texture2D(sampler_MainTex, vTexCoord).bgra;  //testing: rgba->bgra
+        gl_FragColor = texture2D(_Texture0, vTexCoord).bgra;  //testing: rgba->bgra
     }  
 ";
 
 //Pixel shader with two textures
         public var fs_bumpmap = 
  "  varying vec2 vTexCoord;
-    uniform sampler2D sampler_MainTex;
-    uniform sampler2D sampler_SecondTex;
+    uniform sampler2D _Texture0;
+    uniform sampler2D _Texture1;
     uniform float _Time;
     uniform vec2 nme_Mouse;
     //uniform vec4 _ScreenParams;
 
     void main() {
         // Extract the normal from the normal map
-        vec3 normal = normalize(texture2D(sampler_SecondTex, vTexCoord).rgb * 2.0 - 1.0);
+        vec3 normal = normalize(texture2D(_Texture1, vTexCoord).rgb * 2.0 - 1.0);
         // Determine where the light is positioned
         vec3 light_pos = normalize(vec3(nme_Mouse.xy, 1.5));
         // Calculate the lighting diffuse value
         float diffuse = max(dot(normal, light_pos), 0.0);
-        vec4 color  = texture2D(sampler_MainTex, vTexCoord).rgba;
+        vec4 color  = texture2D(_Texture0, vTexCoord).rgba;
         vec3 color1 = diffuse * color.rgb;
         // Set the output color of our current pixel
         gl_FragColor = vec4(color1,color.a);

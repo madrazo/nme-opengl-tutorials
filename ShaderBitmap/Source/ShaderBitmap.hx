@@ -53,7 +53,7 @@ class ShaderBitmap extends Sprite
     private var m_texcoord:Array<Float>;
     private var m_texBuffer:GLBuffer;
     private var m_texArray:Float32Array;
-    private var samplerNameArr:Array<String> = ["sampler_MainTex","sampler_SecondTex"];
+    static private inline var s_samplerName:String = "_Texture";
 
     public function new(shaderProgram:GLProgram, textures:Array<BitmapData>, w:Int=200, h:Int=200):Void
     {
@@ -66,8 +66,8 @@ class ShaderBitmap extends Sprite
         this.h = h;
         this.shaderProgram = shaderProgram;
 
-	    if(textures!=null)
-	    {
+        if(textures!=null)
+        {
             m_textures = textures;
             this.w = textures[0].width;
             this.h = textures[0].height;
@@ -85,15 +85,9 @@ class ShaderBitmap extends Sprite
 
             m_texAttribute = GL.getAttribLocation (shaderProgram, "texPosition");
 
-            var i:Int = m_textures.length-1;
-            var j:Int = 0;
             m_textureName = new Array<Int>();
-            while(i>=0)
-            {
-                m_textureName[i] = GL.getUniformLocation(shaderProgram, samplerNameArr[j]); 
-                i--;
-                j++;
-            }
+            for(i in 0...m_textures.length)
+                m_textureName[i] = GL.getUniformLocation(shaderProgram, s_samplerName+i); 
         }
             
         vertexAttribute = GL.getAttribLocation (shaderProgram, "vertexPosition");
@@ -144,29 +138,18 @@ class ShaderBitmap extends Sprite
     {
         if(m_textures!=null)
         {
-            //m_texAttribute = GL.getAttribLocation (shaderProgram, "texPosition");
-
             GL.bindBuffer (GL.ARRAY_BUFFER, m_texBuffer);    
             GL.enableVertexAttribArray (m_texAttribute);
             GL.vertexAttribPointer (m_texAttribute, 2, GL.FLOAT, false, 0, 0);
-
-            var i:Int = m_textures.length-1;
-            var j:Int = 0;
-
-            //GL.enable(GL.TEXTURE_2D);
-            while(i>=0)
+            for( i in 0...m_textures.length )
             {
-            	if(m_textureName[i]>0)
-            	{
-                    //m_textureName = GL.getUniformLocation(shaderProgram, nameArr[j]); 
+                if( m_textureName[i]>0 )
+                { 
                     GL.activeTexture(GL.TEXTURE0+i);
-                    GL.bindBitmapDataTexture( m_textures[j] );
+                    GL.bindBitmapDataTexture( m_textures[i] );
                     GL.uniform1i( m_textureName[i], i );
                 }
-                i--;
-                j++;
             }
-            //GL.disable(GL.TEXTURE_2D);
         }
     }
     

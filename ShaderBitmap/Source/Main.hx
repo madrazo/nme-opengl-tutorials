@@ -47,9 +47,17 @@ class Main extends Sprite {
             bumpElephant.x = ( (stage.stageWidth) / 2) + 100;
             bumpElephant.y = (stage.stageHeight) / 2;
 
+            //3 textures
+            var shaderProgram_bumpmapingdecal =  nme.gl.Utils.createProgram(vs, fs_bumpmapdecal);
+            var bumpElephantDecal:ShaderBitmap = new ShaderBitmap(shaderProgram_bumpmapingdecal, [bitmapData, bitmapData_n, Assets.getBitmapData ("assets/nme.png")]);
+            bumpElephantDecal.x = ( (stage.stageWidth) / 2) + 250;
+            bumpElephantDecal.y = (stage.stageHeight) / 2;
+
+
             addChild(colorSquare);
             addChild(colorElephant);
             addChild(bumpElephant);
+            addChild(bumpElephantDecal);
         }
     }
 
@@ -122,6 +130,31 @@ class Main extends Sprite {
         vec4 color  = texture2D(_Texture0, vTexCoord).rgba;
         vec3 color1 = diffuse * color.rgb;
         // Set the output color of our current pixel
+        gl_FragColor = vec4(color1,color.a);
+    }
+"
+;
+
+//Pixel shader with two textures
+        public var fs_bumpmapdecal = 
+ "  varying vec2 vTexCoord;
+    uniform sampler2D _Texture0;
+    uniform sampler2D _Texture1;
+    uniform sampler2D _Texture2;
+    uniform float _Time;
+    uniform vec2 nme_Mouse;
+    //uniform vec4 _ScreenParams;
+
+    void main() {
+        vec3 normal = normalize(texture2D(_Texture1, vTexCoord).rgb * 2.0 - 1.0);
+        vec3 light_pos = normalize(vec3(nme_Mouse.xy, 1.5));
+        float diffuse = max(dot(normal, light_pos), 0.0);
+        vec4 color  = texture2D(_Texture0, vTexCoord).rgba;
+        vec3 color1 = diffuse * color.rgb;
+        //add color from third texture
+        vec4 decal  = texture2D(_Texture2, vec2( vTexCoord.x, mod(vTexCoord.y+_Time*0.5,1.0) ) ).rgba;
+        color1.r = mix(color1.r, decal.g, color.a*0.2);
+        color1.g = mix(color1.g, decal.g, color.a*0.2);
         gl_FragColor = vec4(color1,color.a);
     }
 "

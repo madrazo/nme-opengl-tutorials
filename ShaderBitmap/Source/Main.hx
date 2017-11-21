@@ -16,7 +16,7 @@ class Main extends Sprite {
         var logo = new Bitmap ( Assets.getBitmapData ("assets/nme.png") );
         logo.x =  (stage.stageWidth - logo.width) / 2;
         logo.y =  (stage.stageHeight - logo.height) / 2;
-        addChild (logo);
+        //addChild (logo);
 
         var bitmapData = Assets.getBitmapData ("assets/elephant1_Diffuse.png");
         var bitmapData_n = Assets.getBitmapData ("assets/elephant1_Normal.png");
@@ -54,10 +54,16 @@ class Main extends Sprite {
             bumpElephantDecal.y = (stage.stageHeight) / 2;
 
 
-            addChild(colorSquare);
-            addChild(colorElephant);
-            addChild(bumpElephant);
-            addChild(bumpElephantDecal);
+            var shaderProgram_wave =  nme.gl.Utils.createProgram(vs, fs_wave);
+            var postprocessNode:ShaderPostprocess = new ShaderPostprocess(shaderProgram_wave/*, null, 800,600*/);
+
+            addChild(postprocessNode);
+            postprocessNode.addChild(logo);
+
+            postprocessNode.addChild(colorSquare);
+            postprocessNode.addChild(colorElephant);
+            postprocessNode.addChild(bumpElephant);
+            postprocessNode.addChild(bumpElephantDecal);
         }
     }
 
@@ -159,4 +165,22 @@ class Main extends Sprite {
     }
 "
 ;
+
+//Pixel shader with one texture
+        public var fs_wave = 
+"   varying vec2 vTexCoord;
+
+    uniform sampler2D _RenderTexture;   
+    uniform float _Time;
+    //uniform vec2 nme_Mouse;
+    //uniform vec4 _ScreenParams;
+  
+    void main() {  
+        vec2 texcoord = vTexCoord;
+        float offset = _Time * 2.0 *3.14159 * 0.75;
+        texcoord.x += sin(texcoord.y * 4.0*2.0*3.14159 + offset) / 100.0;
+        // Set the output color of our current pixel  
+        gl_FragColor = texture2D(_RenderTexture, texcoord).rgba;  
+    }  
+";
 }

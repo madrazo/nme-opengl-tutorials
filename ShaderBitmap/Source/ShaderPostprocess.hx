@@ -13,13 +13,15 @@ import nme.gl.GLProgram;
 import nme.utils.Float32Array;
 
 import nme.Lib;
+import nme.display.DisplayObject;
 
-class ShaderBitmap extends Sprite
+class ShaderPostprocess extends Sprite
 {
     private var shaderProgram:GLProgram;
     private var vertexAttribute:Int;
     private var vertexBuffer:GLBuffer;
-    private var view:OpenGLView;
+    private var viewStart:OpenGLView;
+    private var viewEnd:OpenGLView;
     
     private var m_vertices:Array<Float>;
     private var m_verticesArray:Float32Array;
@@ -53,39 +55,58 @@ class ShaderBitmap extends Sprite
     private var m_texcoord:Array<Float>;
     private var m_texBuffer:GLBuffer;
     private var m_texArray:Float32Array;
-    static private inline var s_samplerName:String = "_Texture";
 
-    public function new(shaderProgram:GLProgram, textures:Array<BitmapData>, w:Int=200, h:Int=200):Void
+    private var m_clear:Bool;
+    private var m_clear_r:Float;
+    private var m_clear_g:Float;
+    private var m_clear_b:Float;
+    private var m_clear_alpha:Float;
+
+    private var m_target:RenderTarget;
+    public static var sCurrentTarget:RenderTarget;
+    private var mRestoreTarget:RenderTarget;
+
+    static private inline var s_samplerName:String = "_Texture";
+    static private inline var s_renderSamplerName:String = "_RenderTexture";
+
+    public function new(shaderProgram:GLProgram, textures:Array<BitmapData>=null, w:Int=-1, h:Int=-1):Void
     {
 
         super(); 
 
         this.x = x;
         this.y = y;
-        this.w = w;
-        this.h = h;
-        this.shaderProgram = shaderProgram;
+        if(w>0 && h>0)
+        {
+            this.w = w;
+            this.h = h;
+        }
+        else
+        {
+            this.w = Lib.current.stage.stageWidth;
+            this.h = Lib.current.stage.stageHeight;
+        }
         m_positionY = -1;
+        this.shaderProgram = shaderProgram;
+
+
+        m_texBuffer = GL.createBuffer ();    
+        m_texcoord = [
+                1.0, 1.0,
+                0.0, 1.0,
+                1.0, 0.0,
+                0.0, 0.0
+            ];
+        m_texArray = new Float32Array (m_texcoord);
+        GL.bindBuffer (GL.ARRAY_BUFFER, m_texBuffer);    
+        GL.bufferData (GL.ARRAY_BUFFER, m_texArray , GL.STATIC_DRAW);
+
+        m_texAttribute = GL.getAttribLocation (shaderProgram, "texPosition");
+
 
         if(textures!=null)
         {
             m_textures = textures;
-            this.w = textures[0].width;
-            this.h = textures[0].height;
-            
-            m_texBuffer = GL.createBuffer ();    
-            m_texcoord = [
-                    1.0, 1.0,
-                    0.0, 1.0,
-                    1.0, 0.0,
-                    0.0, 0.0
-                ];
-            m_texArray = new Float32Array (m_texcoord);
-            GL.bindBuffer (GL.ARRAY_BUFFER, m_texBuffer);    
-            GL.bufferData (GL.ARRAY_BUFFER, m_texArray , GL.STATIC_DRAW);
-
-            m_texAttribute = GL.getAttribLocation (shaderProgram, "texPosition");
-
             m_textureName = new Array<Int>();
             for(i in 0...m_textures.length)
                 m_textureName[i] = GL.getUniformLocation(shaderProgram, s_samplerName+i); 
@@ -102,12 +123,21 @@ class ShaderBitmap extends Sprite
         
         startTime = Lib.getTimer ();
         
-        view = new OpenGLView ();
-        vertexBuffer = GL.createBuffer ();            
-        view.render = renderView;
-        addChild(view);
-        
+        viewEnd = new OpenGLView ();            
+        viewEnd.render = renderViewEnd;
+
+        viewStart = new OpenGLView ();           
+        viewStart.render = renderviewStart;
+
+        vertexBuffer = GL.createBuffer ();
+
+        addChild(viewEnd);
+        addChild(viewStart);
+
         rebuildMatrix();
+
+        //test: fill with red color
+        //setClear( true, 0.5, 1.0, 0, 0 );
     }
     
     public function setSize( w:Int, h:Int ):Void 
@@ -119,10 +149,10 @@ class ShaderBitmap extends Sprite
     
     private function rebuildMatrix():Void 
     {
-        var x2 = w / 2;
-        var x1 = -x2;
-        var y2 = h / 2;
-        var y1 = -y2;
+        var x2 = w;
+        var x1 = 0;
+        var y2 = 0;
+        var y1 = h;
         m_vertices = [
             x2, y2, 10,
             x1, y2, 10,
@@ -137,6 +167,17 @@ class ShaderBitmap extends Sprite
 
     private inline function bindTextures():Void 
     {
+        GL.bindBuffer (GL.ARRAY_BUFFER, m_texBuffer);    
+        GL.enableVertexAttribArray (m_texAttribute);
+        GL.vertexAttribPointer (m_texAttribute, 2, GL.FLOAT, false, 0, 0);
+
+        var textureName = GL.getUniformLocation(shaderProgram, s_renderSamplerName); 
+        GL.activeTexture(GL.TEXTURE0);
+
+        GL.bindTexture( GL.TEXTURE_2D, m_target.getTexture() );
+
+        GL.uniform1i( textureName, 0 );
+
         if(m_textures!=null)
         {
             GL.bindBuffer (GL.ARRAY_BUFFER, m_texBuffer);    
@@ -156,18 +197,64 @@ class ShaderBitmap extends Sprite
     
     private inline function unbindTextures():Void 
     {
-        //if(m_textures!=null)
-        //{
-        //    GL.activeTexture(GL.TEXTURE1);
-        //    GL.bindTexture(GL.TEXTURE_2D, null);
-        //    GL.activeTexture(GL.TEXTURE0);  
-        //    GL.bindTexture(GL.TEXTURE_2D, null);
-        //    GL.disableVertexAttribArray(m_texAttribute);
-        //}
+        GL.bindTexture( GL.TEXTURE_2D, null );
     }
     
-    function renderView (rect:Rectangle):Void
+    function renderviewStart (rect:Rectangle):Void
     {
+        if( m_target == null )
+            m_target = getTarget( Std.int(rect.width), Std.int(rect.height) );
+
+        mRestoreTarget = sCurrentTarget;
+        sCurrentTarget = m_target;
+
+        //startRenderToTexture
+        GL.bindFramebuffer( GL.FRAMEBUFFER, m_target.getFramebuffer() );
+
+    #if 0 //desktop
+        // Fix if app is resized.
+        if ( appscale > 1.0 )
+            GL.viewport(0,0,APP_WIDTH,APP_HEIGHT);
+#end
+        if ( m_clear )
+        {
+            GL.clearColor( m_clear_r, m_clear_g, m_clear_b, m_clear_alpha );
+            GL.clear( GL.COLOR_BUFFER_BIT );
+        }
+}
+
+    private function getTarget( w:Int = -1, h:Int = -1 ):RenderTarget
+    {
+        return new RenderTarget( w, h );
+    }
+
+    public function setClear( value:Bool, alpha:Float = 0.0, r:Float = 0.0, g:Float = 0.0, b:Float = 0.0 )
+    {
+        m_clear = value;
+        m_clear_alpha = alpha;
+        m_clear_r = r;
+        m_clear_g = g;
+        m_clear_b = b;
+    }
+
+    private function renderViewEnd (rect:Rectangle):Void
+    {       
+        if( mRestoreTarget!=null )
+        {
+            sCurrentTarget = mRestoreTarget;
+            GL.bindFramebuffer( GL.FRAMEBUFFER, mRestoreTarget.getFramebuffer() );
+        }
+        else
+        {
+            sCurrentTarget = null;
+            GL.bindFramebuffer( GL.FRAMEBUFFER, null );
+        }
+
+        #if 0 //desktop
+        if ( appscale > 1.0 )
+            GL.viewport( 0, 0, Lib.current.stage.stageWidth, Lib.current.stage.stageWidthHeight);
+        #end
+
         GL.useProgram (shaderProgram);
         
         GL.bindBuffer (GL.ARRAY_BUFFER, vertexBuffer);
@@ -209,7 +296,20 @@ class ShaderBitmap extends Sprite
         GL.bindBuffer (GL.ARRAY_BUFFER, null);    
         GL.useProgram (null);
         GL.disableVertexAttribArray(vertexAttribute);
-        
+
+    }
+
+    override public function addChild(child:DisplayObject):DisplayObject 
+    {
+      nmeAddChild(child);
+      nmeAddChild(viewEnd);
+      return child;
+    }
+
+    override public function addChildAt(child:DisplayObject, index:Int):DisplayObject 
+    {
+      addChildAt(child, index+1);
+      return child;
     }
 }
 

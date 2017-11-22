@@ -25,7 +25,6 @@ class Main extends Sprite {
         var bitmap = new Bitmap ( bitmapData );
         bitmap.x =  (stage.stageWidth - bitmap.width) / 2 -100;
         bitmap.y =  (stage.stageHeight - bitmap.height) / 2;
-        addChild (bitmap);
 
         //Objects that use OGLView
         {
@@ -65,6 +64,7 @@ class Main extends Sprite {
             postprocessNode.addChild(bumpElephant);
             postprocessNode.addChild(bumpElephantDecal);
         }
+        addChild (bitmap);
     }
 
 
@@ -141,7 +141,7 @@ class Main extends Sprite {
 "
 ;
 
-//Pixel shader with two textures
+//Pixel shader with three textures
         public var fs_bumpmapdecal = 
  "  varying vec2 vTexCoord;
     uniform sampler2D _Texture0;
@@ -166,7 +166,7 @@ class Main extends Sprite {
 "
 ;
 
-//Pixel shader with one texture
+//Pixel shader with one render texture
         public var fs_wave = 
 "   varying vec2 vTexCoord;
 

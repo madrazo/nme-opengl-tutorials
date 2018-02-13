@@ -2,7 +2,9 @@ import nme.display.Sprite;
 import nme.geom.Rectangle;
 import nme.display.OpenGLView;
 import nme.gl.GL;
+#if gles3
 import nme.gl.GL3;
+#end
 import nme.Assets;
 import nme.Lib;
 import nme.utils.Float32Array;
@@ -27,7 +29,7 @@ class Main extends Sprite {
         var fragShader:String = 
 "// Ouput data
 " + 
-Utils.OUT_COLOR("color") +
+vs_out_color("color") +
 "
 void main(){
     // Output color = red 
@@ -39,7 +41,7 @@ void main(){
         var vertShader:String = 
 "// Input vertex data, different for all executions of this shader.
 " +
-Utils.IN(0) + " vec3 vertexPosition_modelspace;
+vs_in(0) + " vec3 vertexPosition_modelspace;
 
 void main(){
     gl_Position.xyz = vertexPosition_modelspace;
@@ -50,14 +52,14 @@ void main(){
         // Dark blue background: For NME, use "opaqueBackground" instead of "clearColor"
         //GL.clearColor(0.0, 0.0, 0.4, 0.0);
         nme.Lib.stage.opaqueBackground = 0x000066;
-
+#if gles3
         //GLES3
         if (Utils.isGLES3compat())
         {
             var vertexarray = GL3.createVertexArray();
             GL3.bindVertexArray(vertexarray);
         }
-
+#end
         // Create and compile our GLSL program from the shaders
         var prog = Utils.createProgram(vertShader,fragShader);
 
@@ -73,7 +75,9 @@ void main(){
         GL.bufferData(GL.ARRAY_BUFFER, new Float32Array(g_vertex_buffer_data), GL.STATIC_DRAW);
 
         var posAttrib = 0;
+#if gles3
         if (!Utils.isGLES3compat())
+#end
         {
           posAttrib = GL.getAttribLocation(prog, "vertexPosition_modelspace");
         }
@@ -114,6 +118,7 @@ void main(){
         tex.autoSize = TextFieldAutoSize.LEFT;
         tex.background = true;
         tex.defaultTextFormat.size = 200;
+#if gles3
         if (Utils.isGLES3compat())
         {
             trace("Compatible with GLES3 API");
@@ -124,6 +129,44 @@ void main(){
             trace("Not compatible with GLES3 API");
             tex.text = "Not compatible with GLES3 API";
         }
+#else
+            tex.text = "Using GLES2";
+#end
     }
-    
+
+    function fs_in():String
+    {
+        #if gles3
+        return Utils.IN();
+        #else
+        return "\nvarying ";
+        #end
+    }
+
+    function vs_out():String
+    {
+        #if gles3
+        return Utils.OUT();
+        #else
+        return "\nvarying ";
+        #end
+    }
+
+    function vs_in(slot:Int):String
+    {
+        #if gles3
+        return Utils.IN(slot);
+        #else
+        return "\nattribute ";
+        #end
+    }
+
+    function vs_out_color(slot:String):String
+    {
+        #if gles3
+        return Utils.OUT_COLOR(slot);
+        #else
+        return "\n#define "+slot+" gl_FragColor\n";
+        #end
+    }    
 }

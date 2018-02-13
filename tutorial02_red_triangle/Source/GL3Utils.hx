@@ -30,7 +30,15 @@ class GL3Utils {
             }
             else
             {
-                result.add(line);
+                words = line.split(" ");
+                if(words[0]=="out")
+                {
+                    words = line.split("out ");
+                    result.add("varying ");
+                    result.add(words[1]);
+                }
+                else
+                    result.add(line);
             }
        }
        return result.toString();
@@ -53,7 +61,15 @@ class GL3Utils {
             }
             else
             {
-                result.add(line);
+                words = line.split(" ");
+                if(words[0]=="in")
+                {
+                    words = line.split("in ");
+                    result.add("varying ");
+                    result.add(words[1]);
+                }
+                else
+                    result.add(line);
             }
        }
        return result.toString();

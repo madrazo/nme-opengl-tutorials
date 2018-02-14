@@ -79,7 +79,7 @@ void main(){
         var view:Matrix3D = new Matrix3D();
         var projection = Matrix3D.createOrtho(-10.0,10.0,-10.0,10.0,0.0,100.0);
 #else
-       //Perp camera
+       //Persp camera
         var view:Matrix3D = GLM.lookAt(
           new Vector3D(4,3,-3), // Camera is at (4,3,-3), in World Space
           new Vector3D(0,0,0), // and looks at the origin

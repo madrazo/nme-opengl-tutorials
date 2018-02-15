@@ -29,6 +29,7 @@ class Main extends Sprite {
         addDebugText();
 
         var fragShader:String = 
+(GL3Utils.isDesktopGL()? "#version 330 core\n" : "#version 300 es\nprecision mediump float;\n") +
 "// Ouput data 
 out vec4 color;
 void main(){
@@ -39,6 +40,7 @@ void main(){
 
 
         var vertShader:String = 
+(GL3Utils.isDesktopGL()? "#version 330 core\n" : "#version 300 es\nprecision mediump float;\n") +
 "// Input vertex data, different for all executions of this shader. 
 layout(location = 0) in vec3 vertexPosition_modelspace;
 

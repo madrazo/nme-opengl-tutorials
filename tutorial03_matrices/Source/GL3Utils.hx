@@ -11,11 +11,17 @@ class GL3Utils {
     {
         var lines:Array<String> = source.split("\n");
         var result:StringBuf = new StringBuf();
+        var bFirstLine:Bool = true;
 
         for(line in lines)
         {
-	    var fullLine = line.split("//");
-	    var line2 = fullLine[0];//Remove coments
+            var fullLine = line.split("//");
+            var line2 = fullLine[0]; //Remove comments
+            if(bFirstLine && line2.indexOf("#version")>=0)
+            {
+                bFirstLine = false;
+                continue;
+            }
             var words:Array<String> = line2.split(" in ");
             if(words.length>=2)
             {
@@ -42,16 +48,16 @@ class GL3Utils {
                     result.add("\n");
                 }
                 else
-		{
+                {
                     result.add(line2);
                     result.add("\n");
-		}
+                }
             }
-	    //for(i in 1...fullLine.length)
-	    //{	    	
+        //for(i in 1...fullLine.length)
+        //{            
             //    result.add("//");
             //    result.add(fullLine[i]);
-	    //}
+        //}
        }
        return result.toString();
    }
@@ -60,11 +66,20 @@ class GL3Utils {
     {
         var lines:Array<String> = source.split("\n");
         var result:StringBuf = new StringBuf();
+        var bFirstLine:Bool = true;
+
+        result.add("#define texture texture2D\n");
 
         for(line in lines)
         {
-	    var fullLine = line.split("//");
-	    var line2 = fullLine[0];//Remove coments
+
+            var fullLine = line.split("//");
+            var line2 = fullLine[0];//Remove coments
+            if(bFirstLine && line2.indexOf("#version")>=0)
+            {
+                bFirstLine = false;
+                continue;
+            }
             var words:Array<String> = line2.split("out vec4 ");
             if(words.length>=2)
             {
@@ -85,10 +100,10 @@ class GL3Utils {
                     result.add("\n");
                 }
                 else
-		{
+        {
                     result.add(line2);
                     result.add("\n");
-		}
+        }
             }
        }
        return result.toString();
@@ -96,9 +111,20 @@ class GL3Utils {
 
    public static function isGLES3compat():Bool
    {
+    #if gles3
       initGLVersion();
       return _isGLES3compat;
+    #else
+      return false;
+    #end
    };
+
+   public static function isDesktopGL():Bool
+   {
+      initGLVersion();
+      return !_isGLES;
+   };
+
    //Inits glVersion, isGLES, isGLES3compat, isWebGL
    public static function initGLVersion()
    {

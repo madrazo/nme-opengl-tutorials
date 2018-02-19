@@ -72,6 +72,7 @@ class ObjLoader {
 
             var v:Int = (vertexIndex-1)*3;
             var t:Int = (uvIndex-1)*2;
+            var n:Int = (normalIndex-1)*3;
             vertexBufferData.push(temp_vertices[ v ]);
             vertexBufferData.push(temp_vertices[ v+1 ]);
             vertexBufferData.push(temp_vertices[ v+2 ]);
@@ -79,6 +80,9 @@ class ObjLoader {
             uvBufferData.push(temp_uvs[ t ]);
             uvBufferData.push(1.0-temp_uvs[ t+1 ]); //1.0- OK?
 
+            normalsBufferData.push(temp_normals[ n ]);
+            normalsBufferData.push(temp_normals[ n+1 ]);
+            normalsBufferData.push(temp_normals[ n+2 ]);
         }
     }  
 }

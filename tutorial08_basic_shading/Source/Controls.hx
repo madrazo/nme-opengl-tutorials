@@ -61,7 +61,7 @@ class Controls {
 
       // Compute new orientation
       horizontalAngle += m_mouseSpeed * dx;
-      verticalAngle   += m_mouseSpeed * dy;
+      //verticalAngle   += m_mouseSpeed * dy;
 
       // Direction : Spherical coordinates to Cartesian coordinates conversion
       var direction:Vector3D = new Vector3D( 
@@ -99,14 +99,14 @@ class Controls {
       if(rightKey)
       {
         var keyDirection = right.clone();
-        keyDirection.scaleBy(deltaTime * m_speed);
+        keyDirection.scaleBy(deltaTime * (-m_speed));
         m_position.incrementBy( keyDirection );
       }
       // Strafe left
       if(leftKey)
       {
         var keyDirection = right.clone();
-        keyDirection.scaleBy(deltaTime * (-m_speed));
+        keyDirection.scaleBy(deltaTime * (m_speed));
         m_position.incrementBy( keyDirection );
       }
 

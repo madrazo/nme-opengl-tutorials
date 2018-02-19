@@ -2,7 +2,10 @@ import nme.display.Sprite;
 import nme.geom.Rectangle;
 import nme.display.OpenGLView;
 import nme.gl.GL;
+#if gles3
 import nme.gl.GL3;
+#end
+import GL3Utils;
 import nme.Assets;
 import nme.Lib;
 import nme.utils.Float32Array;
@@ -37,16 +40,14 @@ class Main extends Sprite {
 
         var fragShader:String = 
 "// Interpolated values from the vertex shaders
-" + Utils.IN() + " vec2 UV;
-" + Utils.IN() + " vec3 Position_worldspace;
-" + Utils.IN() + " vec3 Normal_cameraspace;
-" + Utils.IN() + " vec3 EyeDirection_cameraspace;
-" + Utils.IN() + " vec3 LightDirection_cameraspace;
+in vec2 UV;
+in vec3 Position_worldspace;
+in vec3 Normal_cameraspace;
+in vec3 EyeDirection_cameraspace;
+in vec3 LightDirection_cameraspace;
 
 // Ouput data
-" + 
-Utils.OUT_COLOR("color") +
-"
+out vec4 color;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D myTextureSampler;
@@ -57,7 +58,7 @@ void main(){
 	// Light emission properties
 	// You probably want to put them as uniforms
 	vec3 LightColor = vec3(1,1,1);
-	float LightPower = 50.0f;
+	float LightPower = 50.0;
 	
 	// Material properties
 	vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;
@@ -103,19 +104,16 @@ void main(){
 
       var vertShader:String =
 "// Input vertex data, different for all executions of this shader.
-" +
-Utils.IN(0) + " vec3 vertexPosition_modelspace;
-" +
-Utils.IN(1) + " vec2 vertexUV;
-" +
-Utils.IN(2) + " vec3 vertexNormal_modelspace;
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec2 vertexUV;
+layout(location = 2) in  vec3 vertexNormal_modelspace;
 
 // Output data ; will be interpolated for each fragment.
-" + Utils.OUT() + " vec2 UV;
-" + Utils.OUT() + " vec3 Position_worldspace;
-" + Utils.OUT() + " vec3 Normal_cameraspace;
-" + Utils.OUT() + " vec3 EyeDirection_cameraspace;
-" + Utils.OUT() + " vec3 LightDirection_cameraspace;
+out vec2 UV;
+out vec3 Position_worldspace;
+out vec3 Normal_cameraspace;
+out vec3 EyeDirection_cameraspace;
+out vec3 LightDirection_cameraspace;
 
 // Values that stay constant for the whole mesh.
 uniform mat4 MVP;
@@ -162,15 +160,20 @@ void main(){
         // Dark blue background: For NME, use "opaqueBackground" instead of "clearColor"
         //GL.clearColor(0.0, 0.0, 0.4, 0.0);
         nme.Lib.stage.opaqueBackground = 0x000066;
-
-        //GLES3
-        if (Utils.isGLES3compat())
+#if gles3
+        if (GL3Utils.isGLES3compat())
         {
             var vertexarray = GL3.createVertexArray();
             GL3.bindVertexArray(vertexarray);
         }
+#end
 
         // Create and compile our GLSL program from the shaders
+        if (!GL3Utils.isGLES3compat())
+        {
+            vertShader = GL3Utils.vsToGLES2(vertShader);
+            fragShader = GL3Utils.fsToGLES2(fragShader);
+        }
         var prog = Utils.createProgram(vertShader,fragShader);
 
         // Get a handle for our "MVP" uniform
@@ -204,7 +207,7 @@ void main(){
         var posAttrib = 0;
         var uvAttrib = 1;
         var normalAttrib = 2;
-        if (!Utils.isGLES3compat())
+        if (!GL3Utils.isGLES3compat())
         {
             posAttrib = GL.getAttribLocation(prog, "vertexPosition_modelspace");
             uvAttrib = GL.getAttribLocation(prog, "vertexUV");
@@ -310,7 +313,7 @@ void main(){
         tex.autoSize = TextFieldAutoSize.LEFT;
         tex.background = true;
         tex.defaultTextFormat.size = 200;
-        if (Utils.isGLES3compat())
+        if (GL3Utils.isGLES3compat())
         {
             trace("Compatible with GLES3 API");
             tex.text = "Compatible with GLES3 API";
@@ -318,7 +321,7 @@ void main(){
         else
         {
             trace("Not compatible with GLES3 API");
-            tex.text = "Not compatible with GLES3 API";
+            tex.text = "Not compatible with GLES3 API or forced GLES2";
         }
     }
     

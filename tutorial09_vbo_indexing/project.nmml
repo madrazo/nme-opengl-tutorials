@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="Tutorial  09 - VBO Indexing" package="nme.opengltutorials.tutorial09" version="1.0.0" company="NME" />
+	<app main="Main" path="Export" file="Tutorial09" />
+	
+	<source path="Source" />
+	
+	<haxelib name="nme" />
+
+	<assets path="Assets" rename="assets" exclude="nme.svg" />
+	<!--<icon path="Assets/nme.svg" />-->
+
+</project>

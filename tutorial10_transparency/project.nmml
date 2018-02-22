@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="Tutorial  10 - Transparency" package="nme.opengltutorials.tutorial10" version="1.0.0" company="NME" />
+	<app main="Main" path="Export" file="Tutorial10" />
+	
+	<source path="Source" />
+	
+	<haxelib name="nme" />
+
+	<assets path="Assets" rename="assets" exclude="nme.svg" />
+	<!--<icon path="Assets/nme.svg" />-->
+
+</project>

@@ -264,7 +264,7 @@ void main(){
                 );
 
 
-            // Draw the triangle !
+            // Draw the triangles !
             GL.drawArrays(GL.TRIANGLES, 0, 12*3);
             GL.disableVertexAttribArray(0);
             GL.disableVertexAttribArray(1);

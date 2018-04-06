@@ -26,6 +26,7 @@ import Controls;
 import ObjLoader;
 
 import haxe.ds.HashMap;
+import haxe.Int64;
 
 class Main extends Sprite {
     
@@ -438,6 +439,31 @@ class PackedVert
     }
     public function hashCode():Int
     {
-        return Std.int((100*x + 10000*y - 100000*z)*(u-v)-100*(nx+ny+nz)); //of course don't use this, but a real hash map
+        var xi:Int = Math.floor(x*0x1000);
+        var yi:Int = Math.floor(y*0x1000);
+        var zi:Int = Math.floor(z*0x1000);
+
+        var ui:Int = Math.floor(u*0xFF);
+        var vi:Int = Math.floor(v*0xFF);
+        var nxi:Int = Math.floor(nx*0xFF);
+        var nyi:Int = Math.floor(ny*0xFF);
+        var nzi:Int = Math.floor(nz*0xFF);
+
+        var keyA:Int = ui | (vi << 8) | (nxi << 16) | (nyi << 24);
+        var keyB:Int = nzi | (xi << 4)| (yi << 8) | (zi << 20);
+
+        //ref https://gist.github.com/badboy/6267743
+
+        var key:Int64 = Int64.make( xi, yi);
+
+        key = (~key) + (key << 18); // key = (key << 18) - key - 1;
+        key = key ^ (key >>> 31);
+        key = key * 21; // key = (key + (key << 2)) + (key << 4);
+        key = key ^ (key >>> 11);
+        key = key + (key << 6);
+        key = key ^ (key >>> 22);
+
+        return Int64.getLow(key);
     }
+
 }

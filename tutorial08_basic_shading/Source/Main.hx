@@ -39,6 +39,7 @@ class Main extends Sprite {
         addDebugText();
 
         var fragShader:String = 
+(GL3Utils.isDesktopGL()? "#version 330 core\n" : "#version 300 es\nprecision mediump float;\n") +
 "// Interpolated values from the vertex shaders
 in vec2 UV;
 in vec3 Position_worldspace;
@@ -103,6 +104,7 @@ void main(){
 
 
       var vertShader:String =
+(GL3Utils.isDesktopGL()? "#version 330 core\n" : "#version 300 es\nprecision mediump float;\n") +
 "// Input vertex data, different for all executions of this shader.
 layout(location = 0) in vec3 vertexPosition_modelspace;
 layout(location = 1) in vec2 vertexUV;
